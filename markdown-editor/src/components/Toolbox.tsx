@@ -1,6 +1,6 @@
 import React from 'react';
 import { useSlate } from 'slate-react';
-import { Editor, Transforms, Element as SlateElement } from 'slate';
+import { Editor, Transforms, Range, Element as SlateElement, Path, Node } from 'slate';
 import { CustomText } from './types';
 
 // Type aliases for formats
@@ -21,10 +21,35 @@ const isMarkActive = (editor: Editor, format: MarkFormat) => {
   return marks[format as keyof CustomText] === true;
 };
 
+const insertDivider = (editor: Editor) => {
+  const { selection } = editor;
+  console.log('Selection:', selection);
+
+  if (selection) {
+    const [node] = Editor.node(editor, selection.anchor.path);
+    console.log('Current Node:', node);
+
+    // Insert the divider at the current selection's path
+    const currentPath = selection.anchor.path;
+    console.log('Inserting divider at path:', currentPath);
+
+    Transforms.insertNodes(editor, { type: 'divider', children: [{ text: '' }] }, { at: currentPath });
+  } else {
+    console.log('No selection found');
+  }
+};
+
 // Toggle block formatting
 const toggleBlock = (editor: Editor, format: BlockFormat) => {
   const isActive = isBlockActive(editor, format);
   const isList = format === 'numbered-list' || format === 'bulleted-list';
+
+  if (format === 'divider') {
+    // Insert a divider element at the current selection or cursor position
+    console.log('heyy')
+    insertDivider(editor);
+    return;
+  }
 
   // Unwrap existing lists if necessary
   if (isList) {
