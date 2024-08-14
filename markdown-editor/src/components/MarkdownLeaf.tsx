@@ -14,6 +14,10 @@ const MarkdownLeaf: React.FC<{ attributes: any; children: any; leaf: any }> = ({
     children = <del>{children}</del>;
   }
 
+  if (leaf.highlight) {
+    children = <mark>{children}</mark>;
+  }
+  
   if (leaf.code) {
     children = <code>{children}</code>;
   }

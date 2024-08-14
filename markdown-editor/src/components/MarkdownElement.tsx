@@ -10,7 +10,15 @@ const MarkdownElement: React.FC<{ attributes: any; children: any; element: Custo
       return <h2 {...attributes}>{children}</h2>;
     case 'heading-three':
       return <h3 {...attributes}>{children}</h3>;
-    case 'paragraph':
+    case 'list-item':
+      return <li {...attributes}>{children}</li>;
+    case 'numbered-list':
+      return <ol {...attributes}>{children}</ol>;
+    case 'bulleted-list':
+      return <ul {...attributes}>{children}</ul>;
+    case 'divider':
+      return <hr {...attributes} />;
+      case 'paragraph':
     default:
       return <p {...attributes}>{children}</p>;
   }
