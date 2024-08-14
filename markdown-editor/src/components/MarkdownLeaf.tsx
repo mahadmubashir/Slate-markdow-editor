@@ -15,9 +15,13 @@ const MarkdownLeaf: React.FC<{ attributes: any; children: any; leaf: any }> = ({
   }
 
   if (leaf.highlight) {
-    children = <mark>{children}</mark>;
+    children = <mark style={{ backgroundColor: 'green', color: 'black' }}>{children}</mark>;
   }
-  
+
+  if (leaf.underline) {
+    children = <span style={{ textDecoration: 'underline' }}>{children}</span>;
+  }
+
   if (leaf.code) {
     children = <code>{children}</code>;
   }

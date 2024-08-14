@@ -1,22 +1,13 @@
 import React from 'react';
 import { useSlate } from 'slate-react';
-import { Editor, Transforms, Element as SlateElement, Text } from 'slate';
-import { CustomText, CustomElement } from './types';
+import { Editor, Transforms, Element as SlateElement } from 'slate';
+import { CustomText } from './types';
 
-// Define allowed formats for text and block types
+// Type aliases for formats
+type BlockFormat = 'heading-one' | 'heading-two' | 'heading-three' | 'bulleted-list' | 'numbered-list' | 'divider';
 type MarkFormat = 'bold' | 'italic' | 'underline' | 'strikethrough' | 'highlight' | 'link';
-type BlockFormat = 'paragraph' | 'heading-one' | 'heading-two' | 'heading-three' | 'list-item' | 'numbered-list' | 'bulleted-list' | 'divider';
 
-// Check if a specific mark format is active
-const isMarkActive = (editor: Editor, format: MarkFormat) => {
-  const [match] = Editor.nodes(editor, {
-    match: n => Text.isText(n) && n[format as keyof CustomText] === true,
-    universal: true,
-  });
-  return !!match;
-};
-
-// Check if a specific block format is active
+// Check if a block format is active
 const isBlockActive = (editor: Editor, format: BlockFormat) => {
   const [match] = Editor.nodes(editor, {
     match: n => SlateElement.isElement(n) && n.type === format,
@@ -24,24 +15,44 @@ const isBlockActive = (editor: Editor, format: BlockFormat) => {
   return !!match;
 };
 
-// Apply a mark format
-const toggleMark = (editor: Editor, format: MarkFormat) => {
-  const isActive = isMarkActive(editor, format);
-  Transforms.setNodes(
-    editor,
-    { [format]: isActive ? null : true } as Partial<CustomText>,
-    { match: n => Text.isText(n), split: true }
-  );
+// Check if a mark format is active
+const isMarkActive = (editor: Editor, format: MarkFormat) => {
+  const marks = Editor.marks(editor) as Partial<CustomText>;
+  return marks[format as keyof CustomText] === true;
 };
 
-// Apply a block format
+// Toggle block formatting
 const toggleBlock = (editor: Editor, format: BlockFormat) => {
   const isActive = isBlockActive(editor, format);
-  Transforms.setNodes(
-    editor,
-    { type: isActive ? 'paragraph' : format },
-    { match: n => SlateElement.isElement(n) }
-  );
+  const isList = format === 'numbered-list' || format === 'bulleted-list';
+
+  // Unwrap existing lists if necessary
+  if (isList) {
+    Transforms.unwrapNodes(editor, {
+      match: n => SlateElement.isElement(n) && (n.type === 'bulleted-list' || n.type === 'numbered-list'),
+      split: true,
+    });
+  }
+
+  // Set new block type
+  const newType = isActive ? 'paragraph' : isList ? 'list-item' : format;
+  Transforms.setNodes(editor, { type: newType });
+
+  // Wrap in a list if necessary
+  if (!isActive && isList) {
+    const block = { type: format, children: [] };
+    Transforms.wrapNodes(editor, block);
+  }
+};
+
+// Toggle mark formatting
+const toggleMark = (editor: Editor, format: MarkFormat) => {
+  const isActive = isMarkActive(editor, format);
+  if (isActive) {
+    Editor.removeMark(editor, format);
+  } else {
+    Editor.addMark(editor, format, true);
+  }
 };
 
 const Toolbox: React.FC = () => {
@@ -49,7 +60,6 @@ const Toolbox: React.FC = () => {
 
   return (
     <div className="toolbox">
-      {/* Mark Formats */}
       <button
         onMouseDown={event => {
           event.preventDefault();
@@ -85,24 +95,6 @@ const Toolbox: React.FC = () => {
       <button
         onMouseDown={event => {
           event.preventDefault();
-          toggleMark(editor, 'highlight');
-        }}
-      >
-        Highlight
-      </button>
-      <button
-        onMouseDown={event => {
-          event.preventDefault();
-          toggleMark(editor, 'link');
-        }}
-      >
-        Link
-      </button>
-
-      {/* Block Formats */}
-      <button
-        onMouseDown={event => {
-          event.preventDefault();
           toggleBlock(editor, 'heading-one');
         }}
       >
@@ -127,14 +119,6 @@ const Toolbox: React.FC = () => {
       <button
         onMouseDown={event => {
           event.preventDefault();
-          toggleBlock(editor, 'numbered-list');
-        }}
-      >
-        Ordered list
-      </button>
-      <button
-        onMouseDown={event => {
-          event.preventDefault();
           toggleBlock(editor, 'bulleted-list');
         }}
       >
@@ -143,10 +127,34 @@ const Toolbox: React.FC = () => {
       <button
         onMouseDown={event => {
           event.preventDefault();
+          toggleBlock(editor, 'numbered-list');
+        }}
+      >
+        Ordered list
+      </button>
+      <button
+        onMouseDown={event => {
+          event.preventDefault();
           toggleBlock(editor, 'divider');
         }}
       >
         Divider
+      </button>
+      <button
+        onMouseDown={event => {
+          event.preventDefault();
+          toggleMark(editor, 'highlight');
+        }}
+      >
+        Highlight
+      </button>
+      <button
+        onMouseDown={event => {
+          event.preventDefault();
+          // Handle link formatting if needed
+        }}
+      >
+        Link
       </button>
     </div>
   );

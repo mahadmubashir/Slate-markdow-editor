@@ -11,6 +11,7 @@ export type CustomElement =
   | { type: 'numbered-list'; children: CustomText[] }
   | { type: 'bulleted-list'; children: CustomText[] }
   | { type: 'divider'; children: CustomText[] }
+  | { type: 'highlight'; children: CustomText[] }
   | { type: 'link'; url: string; children: CustomText[] };
 
 // Define a type for custom text nodes
